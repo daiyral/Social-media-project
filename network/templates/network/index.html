@@ -1,0 +1,106 @@
+{% extends "network/layout.html" %}
+{%load static%}
+{%block script%}
+<script src="{%static 'network/network.js'%}"></script>
+
+{%endblock%}
+{% block body %}
+{%if messages%}
+{%for message in messages%}
+  {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+   <div class="container">
+    <div class="row">
+      <div class="col">
+        <div class="alert alert-danger" id="error_msg">{{message}}</div>
+      </div>
+    </div>
+
+   </div>
+  {%endif%}
+{%endfor%}
+{%endif%}
+  <!-- Button trigger modal -->
+<button type="button" id="post_modal" class="btn btn-primary" data-toggle="modal" data-target="#CreatePost">
+    Post
+  </button>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="CreatePost" tabindex="-1" role="dialog" aria-labelledby="CreatePostTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="CreatePostLongTitle">Create a post</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form action="{%url 'create_post'%}"method="POST">
+        {% csrf_token %}
+            <div class="modal-body">
+                <textarea name="post" id="post_body" class="form-control" cols="20" rows="7"></textarea>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="post_btn">Post</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="pagination">
+    <span class="step-links">
+      {%if posts.has_previous%}
+        <a class="pagination-action" href="?page=1"><i class="fas fa-angle-double-left"></i></a>
+        <a class="pagination-action" href="?page={{posts.previous_page_number}}"><i class="fas fa-angle-left"></i></a>
+      {%endif%}
+      <span class="current">
+        {%for num in posts.paginator.page_range%}
+          {%if posts.number == num %}
+          <span class="pagination-number pagination-current">{{num}}</span>
+          {%elif num > posts.number|add:'-3' and num < posts.number|add:'3'%}
+          <a class="pagination-number" href="?page={{num}}">{{num}}</a>
+          {%endif%}
+        {%endfor%}
+      </span>  
+      {%if posts.has_next%}
+        <a class="pagination-action" href="?page={{posts.next_page_number}}"><i class="fas fa-angle-right"></i></a>
+        <a class="pagination-action" href="?page={{posts.paginator.num_pages}}"><i class="fas fa-angle-double-right"></i></a>
+      {%endif%}
+    </span>
+  </div>   
+ {%if posts%}
+<div class="headers">
+  <h3>All Posts</h3>
+</div>
+  
+  <div class="headers" id='error'></div>
+  {%for post in posts%}
+  <div class="card" id="card_{{post.id}}">
+    <div class="card-header text-muted">
+    <a class="profile_links"href="{%url 'profile' post.poster%}"><img src="{{post.poster.picture.url}}" id="post_img">{{post.poster.username}}</a>
+    {%if post.poster.username == user.username%}
+    <a  href="{%url 'delete' post.id %}"id="delete_btn_{{post.id}}"><i class="fas fa-backspace" title='delete'></i></a>
+    <a  href="#"id="edit_btn_{{post.id}}"><i class="fas fa-edit" title='edit' id="edit_{{post.id}}"></i></a>
+        
+    {%endif%}
+    </div>
+    <div class="card-body">
+    <textarea name='body' id='edit_body_{{post.id}}' class='form-control' cols='20' rows='7' style="display:none"></textarea>
+    <button type="submit" id="edit_submit_{{post.id}}" class="btn btn-primary edit_btn" style="display:none">Edit</button>
+    <button id="edit_cancel_{{post.id}}" class="btn btn-secondary edit_btn" style="display:none">Cancel</button>
+    <p class="card-text" id="body_{{post.id}}">{{post.text}}</p>
+    
+    </div>
+    <div class="card-footer text-muted">{{post.date}}
+      <span id="{{post.id}}_cnt" class="like_cnt">{{post.likes}}</span>
+      <a title="like" href="#null" ><i class="fas fa-heart" id="{{post.id}}" title='like'></i></a>
+    </div> 
+  </div>
+  {%endfor%}  
+ {%else%}
+<h3 class="headers">There are no posts at the moment.</h3>
+{%endif%}
+
+{% endblock %}
